@@ -1,0 +1,58 @@
+variant: flatcar
+version: 1.0.0
+passwd:
+  users:
+    - name: core
+      password_hash: $y$j9T$Mbj8NSLlE90qRUb2tc.Md/$qHPMQtejOpLHjsmjQSorEklY6TnAlvSvmX.NcBisg./
+      ssh_authorized_keys:
+        - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMlGbD59oOaEWbrjbzxu63K6NsAlykQgYEoHWa/PtMyW mark@finch-2021-03-07"
+# systemd:
+#   units:
+#     - name: nginx.service
+#       enabled: true
+#       contents: |
+#         [Unit]
+#         Description=NGINX service
+#         [Service]
+#         TimeoutStartSec=0
+#         ExecStartPre=-/usr/bin/docker rm --force nginx1
+#         ExecStart=/usr/bin/docker run --name nginx1 --volume "/var/www:/usr/share/nginx/html:ro" --pull always --log-driver=journald --net host docker.io/nginx:1
+#         ExecStop=/usr/bin/docker stop nginx1
+#         Restart=always
+#         RestartSec=5s
+#         [Install]
+#         WantedBy=multi-user.target
+#     - name: create-fake-disks.service
+#       enabled: true
+#       contents: |
+#         [Unit]
+#         Description=Create fake disks for zpool
+#         [Service]
+#         Type=oneshot
+#         ExecStart=/usr/bin/truncate -s 1G /opt/1.img
+#         ExecStart=/usr/bin/truncate -s 1G /opt/2.img
+#         ExecStart=/usr/bin/truncate -s 1G /opt/3.img
+#         [Install]
+#         WantedBy=multi-user.target
+#     - name: create-zpool.service
+#       enabled: true
+#       contents: |
+#         [Unit]
+#         Description=Create zpool
+#         [Service]
+#         Type=oneshot
+#         ExecStart=/usr/bin/zpool create zpool raidz1 /opt/1.img /opt/2.img /opt/3.img
+#         [Install]
+#         WantedBy=multi-user.target
+#         Requires=create-fake-disks.service
+storage:
+  files:
+    - path: /etc/flatcar/enabled-sysext.conf
+      contents:
+        inline: zfs
+    - path: /etc/systemd/system/docker.service.d/10-use-opt-docker.conf
+      contents:
+        inline: |
+          [Service]
+          ExecStart=
+          ExecStart=/usr/bin/dockerd --data-root /new_location/ -H fd:// $DOCKER_OPTS
