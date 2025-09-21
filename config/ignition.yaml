@@ -3,7 +3,6 @@ version: 1.0.0
 passwd:
   users:
     - name: core
-      password_hash: $y$j9T$Mbj8NSLlE90qRUb2tc.Md/$qHPMQtejOpLHjsmjQSorEklY6TnAlvSvmX.NcBisg./
       ssh_authorized_keys:
         - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMlGbD59oOaEWbrjbzxu63K6NsAlykQgYEoHWa/PtMyW mark@finch-2021-03-07"
 # systemd:
