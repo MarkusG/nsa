@@ -5,50 +5,40 @@ passwd:
     - name: core
       ssh_authorized_keys:
         - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMlGbD59oOaEWbrjbzxu63K6NsAlykQgYEoHWa/PtMyW mark@finch-2021-03-07"
-# systemd:
-#   units:
-#     - name: nginx.service
-#       enabled: true
-#       contents: |
-#         [Unit]
-#         Description=NGINX service
-#         [Service]
-#         TimeoutStartSec=0
-#         ExecStartPre=-/usr/bin/docker rm --force nginx1
-#         ExecStart=/usr/bin/docker run --name nginx1 --volume "/var/www:/usr/share/nginx/html:ro" --pull always --log-driver=journald --net host docker.io/nginx:1
-#         ExecStop=/usr/bin/docker stop nginx1
-#         Restart=always
-#         RestartSec=5s
-#         [Install]
-#         WantedBy=multi-user.target
-#     - name: create-fake-disks.service
-#       enabled: true
-#       contents: |
-#         [Unit]
-#         Description=Create fake disks for zpool
-#         [Service]
-#         Type=oneshot
-#         ExecStart=/usr/bin/truncate -s 1G /opt/1.img
-#         ExecStart=/usr/bin/truncate -s 1G /opt/2.img
-#         ExecStart=/usr/bin/truncate -s 1G /opt/3.img
-#         [Install]
-#         WantedBy=multi-user.target
-#     - name: create-zpool.service
-#       enabled: true
-#       contents: |
-#         [Unit]
-#         Description=Create zpool
-#         [Service]
-#         Type=oneshot
-#         ExecStart=/usr/bin/zpool create zpool raidz1 /opt/1.img /opt/2.img /opt/3.img
-#         [Install]
-#         WantedBy=multi-user.target
-#         Requires=create-fake-disks.service
+systemd:
+  units:
+    - name: import-zpool.service
+      enabled: true
+      contents: |
+        [Unit]
+        Description=Import zpool
+        [Service]
+        Type=oneshot
+        ExecStart=/opt/import-zpool.sh
+        [Install]
+        WantedBy=multi-user.target
 storage:
   files:
+    - path: /etc/systemd/network/static.network
+      contents:
+        inline: |
+          [Match]
+          Name=enp3s0
+
+          [Network]
+          Address=192.168.1.100/24
+          Gateway=192.168.1.1
+          DNS=1.1.1.1
     - path: /etc/flatcar/enabled-sysext.conf
       contents:
         inline: zfs
+    - path: /opt/import-zpool.sh
+      contents:
+        inline: |
+          #!/bin/bash
+
+          /usr/bin/stat /zpool || /usr/bin/zpool import zpool
+      mode: 0755
     - path: /etc/systemd/system/docker.service.d/10-use-opt-docker.conf
       contents:
         inline: |
